@@ -1,0 +1,9 @@
+[submodule "ccal"]
+	path = ccal
+	url = https://github.com/liangqi/ccal.git
+[submodule "webview"]
+	path = webview
+	url = https://github.com/zserge/webview.git
+[submodule "es5-polyfill"]
+	path = es5-polyfill
+	url = https://github.com/o2team/es5-polyfill.git
