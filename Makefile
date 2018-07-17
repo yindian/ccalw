@@ -38,11 +38,13 @@ GENERATED += $(ccalw_GEN_HDR)
 
 ccalw_TARGETS = ccalw
 ccalw_CFLAGS = -Iwebview
+ccalw_CFLAGS += -Wall
 ccalw_CXXFLAGS = -std=c++11 $(ccalw_CFLAGS)
 ccalw_LDFLAGS =
 ifneq ($(findstring mingw,$(CC_V)),)
 ccalw_CFLAGS += -DWEBVIEW_WINAPI=1
 ccalw_LDFLAGS += -lole32 -lcomctl32 -loleaut32 -luuid -mwindows
+#ccalw_LDFLAGS += -mconsole
 ccalw_LDFLAGS += -static
 else ifeq ($(shell uname -s),Linux)
 ccalw_CFLAGS += -DWEBVIEW_GTK=1 $(shell pkg-config --cflags gtk+-3.0 webkit2gtk-4.0)
