@@ -57,6 +57,7 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 ccalw_SOURCES = $(call uniq,$(filter-out %.a, $(foreach prog,$(ccalw_TARGETS),$(value $(prog)_SRC))))
 ccalw_SRC = ccalw.cpp webview.cpp libccal.a
 ccalw_GEN_HDR = polyfill.h
+ccalw_GEN_HDR += nav_js.h
 
 DEP_DIR = deps
 OBJ_DIR = objs
@@ -89,8 +90,8 @@ $(libccal_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o): CXXFLAGS += $(libccal_CXXFLAGS)
 $(filter %.d,$(ccalw_SOURCES:%.c=$(DEP_DIR)/%.c.d)): CFLAGS += $(ccalw_CFLAGS)
 $(filter %.d,$(ccalw_SOURCES:%.cpp=$(DEP_DIR)/%.cpp.d)): CXXFLAGS += $(ccalw_CXXFLAGS)
 $(filter %.d,$(ccalw_SOURCES:%.cpp=$(DEP_DIR)/%.cpp.d)): $(ccalw_GEN_HDR)
-$(filter %.o,$(ccalw_SOURCES:%.c=$(OBJ_DIR)/%.c.o)): Makefile
-$(filter %.o,$(ccalw_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o)): Makefile
+#$(filter %.o,$(ccalw_SOURCES:%.c=$(OBJ_DIR)/%.c.o)): Makefile
+#$(filter %.o,$(ccalw_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o)): Makefile
 $(filter %.o,$(ccalw_SOURCES:%.c=$(OBJ_DIR)/%.c.o)): CFLAGS += $(ccalw_CFLAGS)
 $(filter %.o,$(ccalw_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o)): CXXFLAGS += $(ccalw_CXXFLAGS)
 
@@ -106,6 +107,7 @@ $(filter-out %.a,$(TARGETS)):
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 polyfill.h: es5-polyfill/dist/polyfill.min.js
+nav_js.h: nav.js
 $(ccalw_GEN_HDR): %.h: Makefile
 	echo "#pragma once" > $@
 	echo "static const char *$(patsubst %.h,%,$(@F)) = R\"gen_hdr(" >> $@

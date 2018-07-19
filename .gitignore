@@ -18,3 +18,4 @@ cscope.*
 output.*
 
 polyfill.h
+nav_js.h

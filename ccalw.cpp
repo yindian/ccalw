@@ -1,5 +1,6 @@
 #include <webview.h>
 #include "polyfill.h"
+#include "nav_js.h"
 
 #include <sstream>
 #include <stdarg.h>
@@ -44,7 +45,7 @@ void suppress_warnings(void)
 static void post_message(struct webview *w, const char *arg)
 {
     auto *v = static_cast<std::list<std::pair<std::string, std::string> > *>(w->userdata);
-    char *p = strchr(arg, ':');
+    char *p = strchr(const_cast<char *>(arg), ':');
     if (p)
     {
         *p = '\0';
@@ -71,7 +72,7 @@ std::string get_cal_js_by_year(short int year)
     }
     my_printf("</table>\n</center>\n");
     std::ostringstream oss;
-    oss << "document.body.innerHTML = '";
+    oss << "document.getElementById('app').innerHTML = '";
     oss << std::hex << std::setw(2) << std::setfill('0');
     for (int c = sb.sbumpc(); c != std::stringbuf::traits_type::eof(); c = sb.sbumpc())
     {
@@ -101,7 +102,8 @@ std::string get_cal_js_by_year(short int year)
     }
     oss << "';\n";
     oss << "document.title = 'Year " << std::dec << year << "';\n";
-	oss << "window.external.invoke('title:' + document.title);\n";
+    oss << "window.external.invoke('title:' + document.title);\n";
+    oss << "document.getElementById('year').innerHTML = '" << year << "年';\n";
     return oss.str();
 }
 
@@ -139,6 +141,8 @@ int main(int argc, char *argv[])
             return 1;
         }
         webview_eval(&w, polyfill);
+        std::cout << nav_js;
+        webview_eval(&w, nav_js);
         webview_eval(&w, get_cal_js_by_year(year).data());
         while (webview_loop(&w, 1) == 0)
         {
@@ -150,6 +154,20 @@ int main(int argc, char *argv[])
                 if (msg.first == "title")
                 {
                     webview_set_title(&w, msg.second.data());
+                }
+                else if (msg.first == "year")
+                {
+                    if (year < 1645 || year > 7000)
+                    {
+                        webview_dialog(&w, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
+                                       "ccal", "Invalid year value: year 1645-7000.",
+                                       NULL, 0);
+                    }
+                    else
+                    {
+                        year = std::stoi(msg.second);
+                        webview_eval(&w, get_cal_js_by_year(year).data());
+                    }
                 }
             }
         }
