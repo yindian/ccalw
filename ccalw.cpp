@@ -31,11 +31,78 @@ static int my_printf(const char *format, ...)
 #endif
 
 #include <ctype.h>
+#include <iomanip>
+#include <list>
+#include <iostream>
 
 void suppress_warnings(void)
 {
     (void)webview_check_url;
     (void)my_printf;
+}
+
+static void post_message(struct webview *w, const char *arg)
+{
+    auto *v = static_cast<std::list<std::pair<std::string, std::string> > *>(w->userdata);
+    char *p = strchr(arg, ':');
+    if (p)
+    {
+        *p = '\0';
+        v->push_back(std::make_pair(std::string(arg), std::string(p + 1)));
+    }
+    else
+    {
+        v->push_back(std::make_pair(std::string(), std::string(arg)));
+    }
+}
+
+std::string get_cal_js_by_year(short int year)
+{
+    sb.str("");
+    daysinmonth[1] = IsLeapYear(year) ? 29 : 28;
+    vdouble vterms, vmoons, vmonth;
+    double lastnew, lastmon, nextnew;
+    lunaryear(year, vterms, lastnew, lastmon, vmoons, vmonth, nextnew);
+    my_printf("<center>\n");
+    my_printf("<table border=\"1\" cellspacing=\"1\" width=\"90%%\">\n");
+    for (short int i = 1; i <= 12; i++)
+    {
+        PrintMonth(year, i, vterms, lastnew, lastmon, vmoons, vmonth, nextnew, 1, false, 'u', false);
+    }
+    my_printf("</table>\n</center>\n");
+    std::ostringstream oss;
+    oss << "document.body.innerHTML = '";
+    oss << std::hex << std::setw(2) << std::setfill('0');
+    for (int c = sb.sbumpc(); c != std::stringbuf::traits_type::eof(); c = sb.sbumpc())
+    {
+        if (iscntrl(c))
+        {
+            if (c == '\n')
+            {
+                oss << "\\n";
+            }
+            else
+            {
+                oss << "\\x" << c;
+            }
+        }
+        else if (c == '\'')
+        {
+            oss << "\\'";
+        }
+        else if (c == '\\')
+        {
+            oss << "\\\\";
+        }
+        else
+        {
+            oss.put(c);
+        }
+    }
+    oss << "';\n";
+    oss << "document.title = 'Year " << std::dec << year << "';\n";
+	oss << "window.external.invoke('title:' + document.title);\n";
+    return oss.str();
 }
 
 int main(int argc, char *argv[])
@@ -59,57 +126,32 @@ int main(int argc, char *argv[])
     }
     else
     {
-        if (IsLeapYear(year))
-        {
-            daysinmonth[1] = 29;
-        }
-        vdouble vterms, vmoons, vmonth;
-        double lastnew, lastmon, nextnew;
-        lunaryear(year, vterms, lastnew, lastmon, vmoons, vmonth, nextnew);
-        char titlestr[20];
-        sprintf(titlestr, "Year %d", year);
-        my_printf("<html>\n<head>\n<meta http-equiv=\"Content-Type\" ");
-        my_printf("content=\"text/html; charset=utf-8\">\n");
-        my_printf("<meta name=\"GENERATOR\" content=\"ccal-%s by Zhuo Meng, http://thunder.cwru.edu/ccal/\">\n", versionstr);
-        my_printf("<title>Chinese Calendar for %s / %d%s</title>\n", titlestr, year, U8miscchar[16]);
-        my_printf("</head>\n<body>\n<center>\n");
-        my_printf("<table border=\"1\" cellspacing=\"1\" width=\"90%%\">\n");
-        for (short int i = 1; i <= 12; i++)
-        {
-            PrintMonth(year, i, vterms, lastnew, lastmon, vmoons, vmonth, nextnew, 1, false, 'u', false);
-        }
-        my_printf("</table>\n</center>\n</body>\n</html>\n");
-        std::stringbuf sb2;
-        const char *data_url_prefix = "data:text/html,";
-        sb2.sputn(data_url_prefix, strlen(data_url_prefix));
-        for (int c = sb.sbumpc(); c != std::stringbuf::traits_type::eof(); c = sb.sbumpc())
-        {
-            if (isalnum(c))
-            {
-                sb2.sputc(c);
-            }
-            else
-            {
-                char buf[4];
-                snprintf(buf, sizeof(buf), "%%%02X", c);
-                sb2.sputn(buf, 3);
-            }
-        }
-        std::string html = sb2.str();
+        std::list<std::pair<std::string, std::string> > mq;
         w.width = 640;
         w.height = 480;
         w.resizable = 1;
         w.debug = 1;
-        w.title = titlestr;
-        w.url = html.data();
+        w.userdata = static_cast<void *>(&mq);
+        w.external_invoke_cb = post_message;
         if (webview_init(&w) != 0)
         {
             fprintf(stderr, "webview_init() failed!\n");
             return 1;
         }
         webview_eval(&w, polyfill);
+        webview_eval(&w, get_cal_js_by_year(year).data());
         while (webview_loop(&w, 1) == 0)
         {
+            if (!mq.empty())
+            {
+                const auto msg = mq.front();
+                mq.pop_front();
+                std::cout << "[msg] " << msg.first << " : " << msg.second << std::endl;
+                if (msg.first == "title")
+                {
+                    webview_set_title(&w, msg.second.data());
+                }
+            }
         }
     }
     webview_exit(&w);
