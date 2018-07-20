@@ -152,7 +152,8 @@ int main(int argc, char *argv[])
         webview_eval(&w, get_cal_js_by_year(year).data());
         while (webview_loop(&w, 1) == 0)
         {
-            if (!mq.empty())
+            short int skip_delta = 0;
+            while (!mq.empty())
             {
                 const auto msg = mq.front();
                 mq.pop_front();
@@ -161,12 +162,21 @@ int main(int argc, char *argv[])
                 {
                     webview_set_title(&w, msg.second.data());
                 }
-                else if (msg.first == "year")
+                else if (msg.first == "prev" || msg.first == "next")
                 {
-                    year = std::stoi(msg.second);
-                    if (validate_year(year, &w))
+                    short int delta = msg.first == "prev" ? -1 : 1;
+                    if (delta == skip_delta)
                     {
+                    }
+                    else if (validate_year(year + delta, &w))
+                    {
+                        year += delta;
                         webview_eval(&w, get_cal_js_by_year(year).data());
+                    }
+                    else
+                    {
+                        webview_eval(&w, "stop()");
+                        skip_delta = delta;
                     }
                 }
             }
