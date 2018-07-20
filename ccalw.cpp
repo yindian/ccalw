@@ -107,6 +107,33 @@ std::string get_cal_js_by_year(short int year)
     return oss.str();
 }
 
+bool has_leap_month_in_year(short int leap, short int year)
+{
+    if (!leap)
+    {
+        return true;
+    }
+    daysinmonth[1] = IsLeapYear(year) ? 29 : 28;
+    vdouble vterms, vmoons, vmonth;
+    double lastnew, lastmon, nextnew;
+    double lmon = lunaryear(year, vterms, lastnew, lastmon, vmoons, vmonth, nextnew);
+    //std::cout << "Year " << year << " lmon " << lmon << std::endl;
+    if (lmon > 0.)
+    {
+        for (int i = 0; i < int(vmoons.size()); i++)
+        {
+            if (int(vmonth[i] + 0.9) != int(vmonth[i])) /* found leap month */
+            {
+                if (int(vmonth[i]) == leap)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 bool validate_year(short int year, struct webview *pw)
 {
     if (year < 1645 || year > 7000)
@@ -163,9 +190,9 @@ int main(int argc, char *argv[])
             return 1;
         }
         webview_eval(&w, polyfill);
-        std::cout << nav_js;
         webview_eval(&w, nav_js);
         webview_eval(&w, get_cal_js_by_year(year).data());
+        short int leap = 0;
         while (webview_loop(&w, 1) == 0)
         {
             short int skip_delta = 0;
@@ -199,6 +226,14 @@ int main(int argc, char *argv[])
                             step = 1;
                         }
                     }
+                    while (!has_leap_month_in_year(leap, year + delta * step))
+                    {
+                        ++step;
+                        if (step > 7000)
+                        {
+                            break;
+                        }
+                    }
                     if (delta == skip_delta)
                     {
                     }
@@ -212,6 +247,28 @@ int main(int argc, char *argv[])
                         webview_eval(&w, "stop()");
                         skip_delta = delta;
                     }
+                }
+                else if (msg.first == "leap")
+                {
+                    leap = stoiw(msg.second, &w);
+                    if (leap)
+                    {
+                        short int n = year;
+                        while (!has_leap_month_in_year(leap, n))
+                        {
+                            ++n;
+                            if (n > 7000)
+                            {
+                                break;
+                            }
+                        }
+                        if (validate_year(n, &w))
+                        {
+                            year = n;
+                            webview_eval(&w, get_cal_js_by_year(year).data());
+                        }
+                    }
+                    skip_delta = 0;
                 }
             }
         }

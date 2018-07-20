@@ -5,6 +5,7 @@ CFLAGS += -O3
 else
 CFLAGS += -g
 endif
+CXXFLAGS = $(CFLAGS)
 ifneq ($(CROSS_COMPILE),)
 CC  = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
