@@ -107,6 +107,18 @@ std::string get_cal_js_by_year(short int year)
     return oss.str();
 }
 
+bool validate_year(short int year, struct webview *pw)
+{
+    if (year < 1645 || year > 7000)
+    {
+        webview_dialog(pw, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
+                       "ccal", "Invalid year value: year 1645-7000.",
+                       NULL, 0);
+        return false;
+    }
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
     time_t now = time(NULL);
@@ -120,13 +132,7 @@ int main(int argc, char *argv[])
     }
 
     struct webview w = {};
-    if (year < 1645 || year > 7000)
-    {
-        webview_dialog(&w, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
-                       "ccal", "Invalid year value: year 1645-7000.",
-                       NULL, 0);
-    }
-    else
+    if (validate_year(year, &w))
     {
         std::list<std::pair<std::string, std::string> > mq;
         w.width = 640;
@@ -157,15 +163,9 @@ int main(int argc, char *argv[])
                 }
                 else if (msg.first == "year")
                 {
-                    if (year < 1645 || year > 7000)
+                    year = std::stoi(msg.second);
+                    if (validate_year(year, &w))
                     {
-                        webview_dialog(&w, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
-                                       "ccal", "Invalid year value: year 1645-7000.",
-                                       NULL, 0);
-                    }
-                    else
-                    {
-                        year = std::stoi(msg.second);
                         webview_eval(&w, get_cal_js_by_year(year).data());
                     }
                 }
