@@ -32,11 +32,18 @@ function stop (f) {
     }
   }
 }
+function selyear () {
+  var year = parseInt(document.getElementById('year').textContent);
+  var n = window.prompt('请输入公历年份', year);
+  if (n) {
+    window.external.invoke('year:' + n);
+  }
+}
 var div = document.createElement('div');
 div.style.cssText = 'text-align: center;';
 div.innerHTML = '' +
 '<button type="button" onclick="prev()" ondblclick="prev()" onmousedown="keep(prev)" onmouseup="stop(prev)">&lt;</button>\n' +
-'<span id="year"></span>\n' +
+'<span id="year" onclick="selyear()"></span>\n' +
 '<button type="button" onclick="next()" ondblclick="next()" onmousedown="keep(next)" onmouseup="stop(next)">&gt;</button>\n' +
 '';
 var app = document.getElementById('app');
@@ -46,3 +53,4 @@ window.prev = prev;
 window.next = next;
 window.keep = keep;
 window.stop = stop;
+window.selyear = selyear;

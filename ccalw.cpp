@@ -162,6 +162,15 @@ int main(int argc, char *argv[])
                 {
                     webview_set_title(&w, msg.second.data());
                 }
+                else if (msg.first == "year")
+                {
+                    short int n = std::stoi(msg.second);
+                    if (validate_year(n, &w))
+                    {
+                        year = n;
+                        webview_eval(&w, get_cal_js_by_year(year).data());
+                    }
+                }
                 else if (msg.first == "prev" || msg.first == "next")
                 {
                     short int delta = msg.first == "prev" ? -1 : 1;
