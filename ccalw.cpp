@@ -119,6 +119,22 @@ bool validate_year(short int year, struct webview *pw)
     return true;
 }
 
+int stoiw(const std::string &str, struct webview *pw)
+{
+    int ret = 0;
+    try
+    {
+        ret = std::stoi(str);
+    }
+    catch (const std::exception &e)
+    {
+        webview_dialog(pw, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
+                       "ccal", ("Invalid number " + str).data(),
+                       NULL, 0);
+    }
+    return ret;
+}
+
 int main(int argc, char *argv[])
 {
     time_t now = time(NULL);
@@ -164,7 +180,7 @@ int main(int argc, char *argv[])
                 }
                 else if (msg.first == "year")
                 {
-                    short int n = std::stoi(msg.second);
+                    short int n = stoiw(msg.second, &w);
                     if (validate_year(n, &w))
                     {
                         year = n;
@@ -174,12 +190,21 @@ int main(int argc, char *argv[])
                 else if (msg.first == "prev" || msg.first == "next")
                 {
                     short int delta = msg.first == "prev" ? -1 : 1;
+                    short int step = 1;
+                    if (!msg.second.empty())
+                    {
+                        step = stoiw(msg.second, &w);
+                        if (step < 1)
+                        {
+                            step = 1;
+                        }
+                    }
                     if (delta == skip_delta)
                     {
                     }
-                    else if (validate_year(year + delta, &w))
+                    else if (validate_year(year + delta * step, &w))
                     {
-                        year += delta;
+                        year += delta * step;
                         webview_eval(&w, get_cal_js_by_year(year).data());
                     }
                     else

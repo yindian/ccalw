@@ -1,13 +1,14 @@
+var step = 1;
 function prev (n) {
   n = n || 1;
   do {
-    window.external.invoke('prev:');
+    window.external.invoke('prev:' + step);
   } while (--n);
 }
 function next (n) {
   n = n || 1;
   do {
-    window.external.invoke('next:');
+    window.external.invoke('next:' + step);
   } while (--n);
 }
 var timers = {};
@@ -18,6 +19,9 @@ function keep (f) {
   }
   timers[f] = window.setTimeout(function () {
     timers[f] = window.setInterval(f, 20);
+    timers['new:' + f] = window.setInterval(function () {
+      step *= 2;
+    }, 1000);
   }, 200);
 }
 function stop (f) {
@@ -25,12 +29,15 @@ function stop (f) {
   if (timers[f]) {
     window.clearInterval(timers[f]);
     delete timers[f];
+    window.clearInterval(timers['new:' + f]);
+    delete timers['new:' + f];
   } else if (f === undefined) {
     for (var k in timers) {
       window.clearInterval(timers[k]);
       timers[k] = undefined;
     }
   }
+  step = 1;
 }
 function selyear () {
   var year = parseInt(document.getElementById('year').textContent);
