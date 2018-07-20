@@ -124,10 +124,7 @@ bool has_leap_month_in_year(short int leap, short int year)
         {
             if (int(vmonth[i] + 0.9) != int(vmonth[i])) /* found leap month */
             {
-                if (int(vmonth[i]) == leap)
-                {
-                    return true;
-                }
+                return leap > 12 || int(vmonth[i]) == leap;
             }
         }
     }

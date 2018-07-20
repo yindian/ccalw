@@ -69,6 +69,10 @@ for (var i = 1; i <= 12; i++) {
   option.text = '闰' + monthStr.charAt(i) + '月';
   leap.add(option);
 }
+option = document.createElement('option');
+option.value = i;
+option.text = '有闰月';
+leap.add(option);
 window.prev = prev;
 window.next = next;
 window.keep = keep;
