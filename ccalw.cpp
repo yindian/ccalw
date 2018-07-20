@@ -131,12 +131,22 @@ bool has_leap_month_in_year(short int leap, short int year)
     return false;
 }
 
+#define YEAR_MIN    1645
+#define YEAR_MAX    11736
+#define _STR(x)     #x
+#define STR(x)      _STR(x)
+
 bool validate_year(short int year, struct webview *pw)
 {
-    if (year < 1645 || year > 7000)
+    if (year < YEAR_MIN || year > YEAR_MAX)
     {
+        if (!pw)
+        {
+            return false;
+        }
         webview_dialog(pw, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
-                       "ccal", "Invalid year value: year 1645-7000.",
+                       "ccal", "Invalid year value: year "
+                       STR(YEAR_MIN) "-" STR(YEAR_MAX) ".",
                        NULL, 0);
         return false;
     }
@@ -223,12 +233,12 @@ int main(int argc, char *argv[])
                             step = 1;
                         }
                     }
-                    while (!has_leap_month_in_year(leap, year + delta * step))
+                    if (delta != skip_delta)
                     {
-                        ++step;
-                        if (step > 7000)
+                        while (validate_year(year + delta * step, NULL) &&
+                               !has_leap_month_in_year(leap, year + delta * step))
                         {
-                            break;
+                            ++step;
                         }
                     }
                     if (delta == skip_delta)
@@ -254,7 +264,7 @@ int main(int argc, char *argv[])
                         while (!has_leap_month_in_year(leap, n))
                         {
                             ++n;
-                            if (n > 7000)
+                            if (n > YEAR_MAX)
                             {
                                 break;
                             }
