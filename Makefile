@@ -126,6 +126,9 @@ $(ccalw_GEN_HDR): %.h: Makefile
 	$(if $(filter-out Makefile,$^),cat $(filter-out Makefile,$^) >> $@)
 	echo ")gen_hdr\";" >> $@
 
+liec.ico:
+	convert -size 256x256 xc:transparent -fill red -font /usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf -pointsize 250 -draw "text 6,216 '曆'" -define icon:auto-resize="256,128,96,64,48,32,16" liec.ico
+
 DEP = $(addprefix $(DEP_DIR)/,$(patsubst %.c,%.c.d,$(SRC:.cpp=.cpp.d)))
 findsrc = $(if $(filter $1,$(SRC)),$1,$(notdir $1))
 src2tgt = $(addprefix $(OBJ_DIR)/,$(patsubst %.c,%.c.o,$(patsubst %.cpp,%.cpp.o,$(call findsrc,$1))))
