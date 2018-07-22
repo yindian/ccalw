@@ -136,6 +136,11 @@ bool has_leap_month_in_year(short int leap, short int year)
 #define _STR(x)     #x
 #define STR(x)      _STR(x)
 
+static void run_before_dialog(struct webview *pw)
+{
+    webview_eval(pw, "stop()");
+}
+
 bool validate_year(short int year, struct webview *pw)
 {
     if (year < YEAR_MIN || year > YEAR_MAX)
@@ -144,6 +149,7 @@ bool validate_year(short int year, struct webview *pw)
         {
             return false;
         }
+        run_before_dialog(pw);
         webview_dialog(pw, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
                        "ccal", "Invalid year value: year "
                        STR(YEAR_MIN) "-" STR(YEAR_MAX) ".",
@@ -162,6 +168,7 @@ int stoiw(const std::string &str, struct webview *pw)
     }
     catch (const std::exception &e)
     {
+        run_before_dialog(pw);
         webview_dialog(pw, WEBVIEW_DIALOG_TYPE_ALERT, WEBVIEW_DIALOG_FLAG_ERROR,
                        "ccal", ("Invalid number " + str).data(),
                        NULL, 0);
@@ -235,6 +242,41 @@ int main(int argc, char *argv[])
                     }
                     if (delta != skip_delta)
                     {
+                        bool first = true;
+                        while (!mq.empty() && mq.front().first == msg.first)
+                        {
+                            short int next_step = 1;
+                            if (!mq.front().second.empty())
+                            {
+                                next_step = stoiw(mq.front().second, &w);
+                                if (next_step < 1)
+                                {
+                                    next_step = 1;
+                                }
+                            }
+                            if (validate_year(year + delta * (step + next_step), NULL))
+                            {
+                                if (first)
+                                {
+                                    first = false;
+                                    std::cout << "[msg-batch] " << mq.front().first << " : " << mq.front().second;
+                                }
+                                else
+                                {
+                                    std::cout << ", " << mq.front().second;
+                                }
+                                step += next_step;
+                                mq.pop_front();
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        if (!first)
+                        {
+                            std::cout << std::endl;
+                        }
                         while (validate_year(year + delta * step, NULL) &&
                                !has_leap_month_in_year(leap, year + delta * step))
                         {
@@ -251,7 +293,6 @@ int main(int argc, char *argv[])
                     }
                     else
                     {
-                        webview_eval(&w, "stop()");
                         skip_delta = delta;
                     }
                 }
