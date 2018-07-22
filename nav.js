@@ -40,6 +40,9 @@ function stop (f) {
   step = 1;
 }
 function selyear () {
+  if (true) {
+    return;
+  }
   var year = parseInt(document.getElementById('year').textContent);
   var n = window.prompt('请输入公历年份', year);
   if (n) {

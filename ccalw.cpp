@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
         std::list<std::pair<std::string, std::string> > mq;
         w.width = 640;
         w.height = 480;
+        w.title = "";
         w.resizable = 1;
         w.debug = 1;
         w.userdata = static_cast<void *>(&mq);
@@ -203,9 +204,15 @@ int main(int argc, char *argv[])
             fprintf(stderr, "webview_init() failed!\n");
             return 1;
         }
+        webview_dispatch(&w,
+                         [](struct webview *pw, void *arg)
+                         {
+                         struct webview &w = *pw;
+                         short int year = reinterpret_cast<ptrdiff_t>(arg);
         webview_eval(&w, polyfill);
         webview_eval(&w, nav_js);
         webview_eval(&w, get_cal_js_by_year(year).data());
+                         }, reinterpret_cast<void *>(year));
         short int leap = 0;
         while (webview_loop(&w, 1) == 0)
         {

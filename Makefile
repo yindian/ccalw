@@ -18,6 +18,9 @@ endif
 endif
 
 CC_V := $(shell LANG=C $(CC) -v 2>&1)
+ifeq ($(findstring mingw,$(CC_V)),)
+UNAME_S := $(shell uname -s)
+endif
 
 TARGETS = $(addprefix $(BIN_DIR)/,$(libccal_TARGETS))
 SRC = $(libccal_SOURCES)
@@ -47,10 +50,10 @@ ccalw_CFLAGS += -DWEBVIEW_WINAPI=1
 ccalw_LDFLAGS += -lole32 -lcomctl32 -loleaut32 -luuid -mwindows
 #ccalw_LDFLAGS += -mconsole
 ccalw_LDFLAGS += -static
-else ifeq ($(shell uname -s),Linux)
+else ifeq ($(UNAME_S),Linux)
 ccalw_CFLAGS += -DWEBVIEW_GTK=1 $(shell pkg-config --cflags gtk+-3.0 webkit2gtk-4.0)
 ccalw_LDFLAGS += $(shell pkg-config --libs gtk+-3.0 webkit2gtk-4.0)
-else ifeq ($(shell uname -s),Darwin)
+else ifeq ($(UNAME_S),Darwin)
 ccalw_CFLAGS += -DWEBVIEW_COCOA=1 -x objective-c
 ccalw_LDFLAGS += -framework Cocoa -framework WebKit
 endif
@@ -89,12 +92,20 @@ $(libccal_SOURCES:%.cpp=$(DEP_DIR)/%.cpp.d): CXXFLAGS += $(libccal_CXXFLAGS)
 $(libccal_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o): CXXFLAGS += $(libccal_CXXFLAGS)
 
 $(filter %.d,$(ccalw_SOURCES:%.c=$(DEP_DIR)/%.c.d)): CFLAGS += $(ccalw_CFLAGS)
+ifneq ($(UNAME_S),Darwin)
 $(filter %.d,$(ccalw_SOURCES:%.cpp=$(DEP_DIR)/%.cpp.d)): CXXFLAGS += $(ccalw_CXXFLAGS)
+else
+$(filter %.d,$(ccalw_SOURCES:%.cpp=$(DEP_DIR)/%.cpp.d)): CXXFLAGS += $(patsubst objective-c,objective-c++,$(ccalw_CXXFLAGS))
+endif
 $(filter %.d,$(ccalw_SOURCES:%.cpp=$(DEP_DIR)/%.cpp.d)): $(ccalw_GEN_HDR)
 #$(filter %.o,$(ccalw_SOURCES:%.c=$(OBJ_DIR)/%.c.o)): Makefile
 #$(filter %.o,$(ccalw_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o)): Makefile
 $(filter %.o,$(ccalw_SOURCES:%.c=$(OBJ_DIR)/%.c.o)): CFLAGS += $(ccalw_CFLAGS)
+ifneq ($(UNAME_S),Darwin)
 $(filter %.o,$(ccalw_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o)): CXXFLAGS += $(ccalw_CXXFLAGS)
+else
+$(filter %.o,$(ccalw_SOURCES:%.cpp=$(OBJ_DIR)/%.cpp.o)): CXXFLAGS += $(patsubst objective-c,objective-c++,$(ccalw_CXXFLAGS))
+endif
 
 $(BIN_DIR)/libccal.a: $(call src2obj, $(libccal_a_SRC))
 	@mkdir -p $(@D)
