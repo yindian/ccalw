@@ -10,12 +10,13 @@ ifneq ($(CROSS_COMPILE),)
 CC  = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AR  = $(CROSS_COMPILE)ar
-else
+else ifneq ($(OS),Windows_NT)
 ifeq ($(shell uname -m 2>&1),x86_64)
 CFLAGS += -m64
 LDFLAGS += -m64
 endif
 endif
+WINDRES = $(CROSS_COMPILE)windres
 
 CC_V := $(shell LANG=C $(CC) -v 2>&1)
 ifeq ($(findstring mingw,$(CC_V)),)
@@ -60,13 +61,16 @@ endif
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 ccalw_SOURCES = $(call uniq,$(filter-out %.a, $(foreach prog,$(ccalw_TARGETS),$(value $(prog)_SRC))))
 ccalw_SRC = ccalw.cpp webview.cpp libccal.a
+ifneq ($(findstring mingw,$(CC_V)),)
+ccalw_SRC += icon.rc
+endif
 ccalw_GEN_HDR = polyfill.h
 ccalw_GEN_HDR += nav_js.h
 
 DEP_DIR = deps
 OBJ_DIR = objs
 BIN_DIR = bin
-src2obj = $(addprefix $(OBJ_DIR)/,$(filter %.o,$(patsubst %.c,%.c.o,$(1:.cpp=.cpp.o)))) $(addprefix $(BIN_DIR)/,$(filter %.a,$1)) $(filter-out %.c %.cpp %.a,$1)
+src2obj = $(addprefix $(OBJ_DIR)/,$(filter %.o,$(patsubst %.rc,%.rc.o,$(patsubst %.c,%.c.o,$(1:.cpp=.cpp.o))))) $(addprefix $(BIN_DIR)/,$(filter %.a,$1)) $(filter-out %.c %.cpp %.rc %.a,$1)
 
 ifneq ($(shell which gsed 2>/dev/null),)
 SED = gsed
@@ -126,6 +130,7 @@ $(ccalw_GEN_HDR): %.h: Makefile
 	$(if $(filter-out Makefile,$^),cat $(filter-out Makefile,$^) >> $@)
 	echo ")gen_hdr\";" >> $@
 
+$(call src2obj,icon.rc): icon.rc liec.ico
 liec.ico:
 	convert -size 256x256 xc:transparent -fill red -font /usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf -pointsize 250 -draw "text 6,216 '曆'" -define icon:auto-resize="256,128,96,64,48,32,16" liec.ico
 
@@ -147,3 +152,6 @@ $(OBJ_DIR)/%.c.o: %.c
 $(OBJ_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) -c -o $@ $(CXXFLAGS) $<
+$(OBJ_DIR)/%.rc.o: %.rc
+	@mkdir -p $(@D)
+	$(WINDRES) -o $@ -i $<
