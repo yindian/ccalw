@@ -209,6 +209,12 @@ int main(int argc, char *argv[])
                          {
                          struct webview &w = *pw;
                          short int year = reinterpret_cast<ptrdiff_t>(arg);
+#ifdef WEBVIEW_WINAPI
+                         HICON hIconSm = static_cast<HICON>(LoadImage(GetModuleHandle(NULL), "ID_ICON", IMAGE_ICON, 16, 16, 0));
+                         HICON hIcon = static_cast<HICON>(LoadImage(GetModuleHandle(NULL), "ID_ICON", IMAGE_ICON, 32, 32, 0));
+                         SendMessage(w.priv.hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hIconSm));
+                         SendMessage(w.priv.hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hIcon));
+#endif
         webview_eval(&w, polyfill);
         webview_eval(&w, nav_js);
         webview_eval(&w, get_cal_js_by_year(year).data());
