@@ -1,5 +1,7 @@
 #include <webview.h>
+#if 0
 #include "polyfill.h"
+#endif
 #include "nav_js.h"
 
 #include <sstream>
@@ -215,7 +217,9 @@ int main(int argc, char *argv[])
                          SendMessage(w.priv.hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(hIconSm));
                          SendMessage(w.priv.hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(hIcon));
 #endif
+#if 0
         webview_eval(&w, polyfill);
+#endif
         webview_eval(&w, nav_js);
         webview_eval(&w, get_cal_js_by_year(year).data());
                          }, reinterpret_cast<void *>(year));
