@@ -60,12 +60,14 @@ div.innerHTML = '' +
 '<span id="year" onclick="selyear()"></span>\n' +
 '<button type="button" onclick="next()" ondblclick="next()" onmousedown="keep(next)" onmouseup="stop(next)">&gt;</button>\n' +
 '<div style="float: right"><select id="leap" onchange="setleap()"><option value="0">不筛选</option></select></div>\n' +
+'<hr/>\n' +
 '';
 var app = document.getElementById('app');
+app.style.cssText = 'overflow-y: auto; height: calc(100vh - 56px);';
+div.style.cssText = 'text-align: center; height: 40px;';
 document.body.insertBefore(div, app);
-document.body.insertBefore(document.createElement('hr'), app);
 var leap = document.getElementById('leap');
-var monthStr = '？一二三四五六七八九十冬腊';
+var monthStr = '？正二三四五六七八九十冬腊';
 for (var i = 1; i <= 12; i++) {
   var option = document.createElement('option');
   option.value = i;
