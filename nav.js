@@ -56,15 +56,15 @@ function setleap () {
 var div = document.createElement('div');
 div.style.cssText = 'text-align: center;';
 div.innerHTML = '' +
+'<div style="float: right"><select id="leap" onchange="setleap()"><option value="0">不筛选</option></select></div>\n' +
 '<button type="button" onclick="prev()" ondblclick="prev()" onmousedown="keep(prev)" onmouseup="stop(prev)">&lt;</button>\n' +
 '<span id="year" onclick="selyear()"></span>\n' +
 '<button type="button" onclick="next()" ondblclick="next()" onmousedown="keep(next)" onmouseup="stop(next)">&gt;</button>\n' +
-'<div style="float: right"><select id="leap" onchange="setleap()"><option value="0">不筛选</option></select></div>\n' +
 '<hr/>\n' +
 '';
 var app = document.getElementById('app');
-app.style.cssText = 'overflow-y: auto; height: calc(100vh - 56px);';
-div.style.cssText = 'text-align: center; height: 40px;';
+app.style.cssText = 'overflow-y: auto; height: calc(100vh - 4em);';
+div.style.cssText = 'text-align: center; height: 3em;';
 document.body.insertBefore(div, app);
 var leap = document.getElementById('leap');
 var monthStr = '？正二三四五六七八九十冬腊';
